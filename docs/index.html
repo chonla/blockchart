@@ -47,6 +47,7 @@
             $('#load_data').on('click', () => {
                 const sample_data = $('#sample_data').val();
                 $.get(`https://chonla.github.io/blockchart/${sample_data}.json`, data => {
+                    console.log(data);
                     const blockchart = new BlockCanvas('myCanvas', {});
                     blockchart.loadData(data);
                 });
