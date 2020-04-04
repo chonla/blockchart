@@ -6,48 +6,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Block Chart Experiment</title>
     <link href="https://cdn.jsdelivr.net/npm/bulma@0.8.1/css/bulma.min.css" rel="stylesheet" />
-    <style type="text/css">
-        body {
-            padding-top: 30px;
-        }
-    </style>
 </head>
 
 <body>
     <div class="container">
-        <h1 class="title">Block Chart Experiment</h1>
-        <nav class="panel">
-            <p class="panel-heading">Data set</p>
-            <div class="panel-block">
-                <div class="field is-grouped">
-                    <div class="control">
-                        <div class="select">
-                            <select id="sample_data">
-                                <option value="sample1">Sample 1</option>
-                                <option value="sample2">Sample 2</option>
-                            </select>
+
+        <section class="section">
+            <div class="container">
+                <h1 class="title">Block Chart Experiment</h1>
+                <div class="columns">
+                    <div class="column">
+                        <div class="field is-horizontal">
+                            <div class="field-label is-normal">
+                                <label class="label">Data set</label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <div class="control">
+                                        <div class="select">
+                                            <select id="sample_data">
+                                                <option value="sample1">Sample 1</option>
+                                                <option value="sample2">Sample 2</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        <div class="field is-horizontal">
+                            <div class="field-label is-normal">
+                                <label class="label">Color palette</label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <div class="control">
+                                        <div class="select">
+                                            <select id="color_palette">
+                                                <option value="presetscale_sweetpastel">Sweet Pastel</option>
+                                                <option value="presetscale_fire">Fire</option>
+                                                <option value="scale_greyscale">Greyscale</option>
+                                                <option value="custom_pink">Pink</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field is-horizontal">
+                            <div class="field-label">
+                                <!-- Left empty for spacing -->
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <div class="control">
+                                        <button class="button is-link" id="load_data">
+                                            Load
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                    <div class="control">
-                        <a class="button is-info" id="load_data">
-                            Load
-                        </a>
+                    <div class="column">
+                        <p class="title">Color palette</p>
+                        <p>
+                            Block chart provides customizable background.
+                        </p>
+                        <ul class="list">
+                            <li class="list-item">Use <span class="tag is-primary">custom</span> to tell BlockChart use
+                                fixed background color from <span class="tag is-primary">background.color</span>.</li>
+                            <li class="list-item">Use <span class="tag is-primary">scale</span> to tell BlockChart use
+                                scale palette scaled from <span class="tag is-primary">background.color</span> to <span
+                                    class="tag is-primary">background.scaleTo</span> to generate background color.</li>
+                            <li class="list-item">Use <span class="tag is-primary">preset-scale</span> to tell
+                                BlockChart use preset scale palette from <span
+                                    class="tag is-primary">background.color</span> to generate background color.</li>
+                        </ul>
                     </div>
                 </div>
             </div>
-        </nav>
+
+        </section>
     </div>
-    <canvas id="myCanvas" width="800" height="500"></canvas>
+
+    <div class="container static">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <canvas id="myCanvas" width="800" height="500"></canvas>
+            </div>
+        </div>
+    </div>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/chonla/blockchart@1.0.0/dist/blockchart.min.js">
     </script>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"
         integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
     <script type="text/javascript">
         $(() => {
+
+            const colors = {
+                presetscale_sweetpastel: {
+                    style: 'preset-scale',
+                    color: 'sweet-pastel'
+                },
+                presetscale_fire: {
+                    style: 'preset-scale',
+                    color: 'fire'
+                },
+                scale_greyscale: {
+                    style: 'scale',
+                    color: '#cccccc',
+                    scaleTo: '#000000'
+                },
+                custom_pink: {
+                    style: 'custom',
+                    color: 'pink'
+                }
+            }
+
             $('#load_data').on('click', () => {
                 const sample_data = $('#sample_data').val();
+                const color_background = colors[$('#color_palette').val()];
                 $.get(`https://chonla.github.io/blockchart/${sample_data}.json`, data => {
-                    const blockchart = new BlockChart('myCanvas', {});
+                    const blockchart = new BlockChart('myCanvas', {
+                        blocks: {
+                            background: color_background,
+                            shadow: {
+                                style: 'custom'
+                            }
+                        }
+                    });
                     blockchart.loadData(data);
                 });
             });
