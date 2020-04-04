@@ -2,7 +2,7 @@
   "name": "@chonla/blockchart",
   "version": "1.0.0",
   "description": "Draw a blockchart with html5 canvas.",
-  "main": "index.js",
+  "main": "src/blockchart.js",
   "scripts": {
     "build": "webpack",
     "lint": "eslint src",

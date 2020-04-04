@@ -4,6 +4,20 @@ Block Chart JS draws block chart in HTML canvas.
 
 ## Usage
 
+### npm
+
+```
+npm install @chonla/blockchart
+```
+
+### cdn
+
+```
+https://cdn.jsdelivr.net/gh/chonla/blockchart@1.0.0/dist/blockchart.min.js
+```
+
+### HTML
+
 ```
 <!DOCTYPE html>
 <html lang="en">
