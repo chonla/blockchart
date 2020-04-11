@@ -5,7 +5,10 @@ const defaultOptions = {
 
     // style of canvas and boundary to be plotted on to
     canvas: {
-        backgroundColor: '#ffffff'
+        background: { // background color of canvas
+            style: 'static',
+            color: '#ffffff'
+        }
     },
     padding: {
         top: 30, // space between canvas and top of draw area
@@ -14,7 +17,10 @@ const defaultOptions = {
         right: 50 // space between canvas and right of draw area
     },
     boundary: {
-        backgroundColor: '#ffffff' // background color of boundary
+        background: { // background color of boundary
+            style: 'static',
+            color: '#ffffff'
+        }
     },
     yAxis: {
         width: 1, // thickness of y axis
@@ -86,31 +92,48 @@ const defaultOptions = {
         },
         groupBy: 'value', // key used to group data into same column
         background: {
-            style: 'custom', // custom background color. other supported color is 'scale', 'preset-scale'
+            style: 'static', // custom background color. other supported color is 'scale', 'preset-scale'
             color: '#aaaaaa', // default block background color
             scaleTo: '#eacd31' // when scale style is used, color palette will be generate from color -> scaleTo color
         },
         shadow: {
-            style: 'custom', // custom shadow. other supported shadow is 'none'
+            style: 'static', // custom shadow. other supported shadow is 'none'
             color: '#aaaaaa',
-            blue: 1,
+            blur: 1,
             offsetX: 1,
             offsetY: 1
-        }
-    },
-
-    palettePreset: { // when background style is preset-scale, background.color will be used as name of palletPreset
-        'sweet-pastel': {
-            color: 'pink',
-            scaleTo: '4CBBFC'
         },
-        'fire': {
-            color: 'yellow',
-            scaleTo: 'red'
+        border: {
+            style: 'line',
+            width: 2,
+            color: '#000000'
         }
     }
-
 };
+
+const palettePreset = { // when background style is preset-scale, background.color will be used as name of palletPreset
+    'sweet-pastel': {
+        color: 'pink',
+        scaleTo: '4CBBFC'
+    },
+    'fire': {
+        color: 'yellow',
+        scaleTo: 'red'
+    }
+};
+
+const drawContext = {};
+const toBeSaved = [
+    'fillStyle',
+    'strokeStyle',
+    'lineWidth',
+    'shadowColor',
+    'shadowBlur',
+    'shadowOffsetX',
+    'shadowOffsetY',
+    'textAlign',
+    'font'
+];
 
 class BlockChart {
 
@@ -133,33 +156,49 @@ class BlockChart {
         this.gutterSize = Math.floor(this.blockDimension.width / 2);
         this.initialScale = this.options.blocks.scaleX.scale.map((c) => [c]);
 
+        this.saveContext();
+
         this.erase();
         this.drawBoundary();
         this.drawAxes();
         this.drawLabels();
     }
 
+    saveContext() {
+        for (let ctx in toBeSaved) {
+            drawContext[ctx] = this.context[ctx];
+        }
+    }
+
+    restoreContext() {
+        for (let ctx in toBeSaved) {
+            this.context[ctx] = drawContext[ctx];
+        }
+    }
+
     erase() {
-        this.context.save();
+        this.restoreContext();
 
-        this.context.fillStyle = this.options.canvas.backgroundColor;
-        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.context.restore();
+        if (this.options.canvas.background.style === 'static') {
+            this.context.fillStyle = this.options.canvas.background.color;
+            this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
     }
 
     drawBoundary() {
-        this.context.save();
+        this.restoreContext();
 
-        this.context.fillStyle = this.options.boundary.backgroundColor;
-        this.context.fillRect(this.boundary.left, this.boundary.top, this.boundary.width, this.boundary.height);
-
-        this.context.restore();
+        if (this.options.boundary.background.style === 'static') {
+            this.context.fillStyle = this.options.boundary.background.color;
+            this.context.fillRect(this.boundary.left, this.boundary.top, this.boundary.width, this.boundary.height);
+        }
     }
 
     drawAxes() {
-        this.context.save();
         // Y
+        this.restoreContext();
         this.context.beginPath();
         this.context.moveTo(this.boundary.left, this.boundary.top);
         this.context.strokeStyle = this.options.yAxis.color;
@@ -167,20 +206,18 @@ class BlockChart {
         this.context.lineTo(this.boundary.left, this.boundary.bottom);
         this.context.stroke();
 
-        // X
+        // // X
+        // this.restoreContext();
         this.context.beginPath();
         this.context.moveTo(this.boundary.left, this.boundary.bottom);
         this.context.strokeStyle = this.options.xAxis.color;
         this.context.lineWidth = this.options.xAxis.width;
         this.context.lineTo(this.boundary.right, this.boundary.bottom);
         this.context.stroke();
-
-        this.context.restore();
     }
 
     drawLabels() {
-        this.context.save();
-
+        this.restoreContext();
         this.context.font = `${this.options.xAxis.label.size}px ${this.options.xAxis.label.font}`.toString();
         this.context.fillStyle = this.options.xAxis.label.color;
         this.context.textAlign = 'center';
@@ -190,13 +227,9 @@ class BlockChart {
                 this.boundary.left + ((this.blockDimension.width) * (i + 1) + (this.options.blocks.space.horizontal * i)),
                 this.boundary.bottom + this.options.xAxis.label.size + this.options.xAxis.label.margin.top);
         }
-
-        this.context.restore();
     }
 
     drawBlocks(data) {
-        this.context.save();
-
         let colorFrom = this.options.blocks.background.color;
         let colorTo = this.options.blocks.background.color;
         switch (this.options.blocks.background.style) {
@@ -205,8 +238,8 @@ class BlockChart {
                 colorTo = this.options.blocks.background.scaleTo;
                 break;
             case 'preset-scale':
-                colorFrom = this.options.palettePreset[this.options.blocks.background.color].color;
-                colorTo = this.options.palettePreset[this.options.blocks.background.color].scaleTo;
+                colorFrom = palettePreset[this.options.blocks.background.color].color;
+                colorTo = palettePreset[this.options.blocks.background.color].scaleTo;
                 break;
             default:
         }
@@ -215,27 +248,42 @@ class BlockChart {
 
         for (let i = 0; i < data.length; i++) {
             for (let j = 1; j < data[i].length; j++) {
+                this.restoreContext();
+
                 const block = {
                     x: (i * (this.blockDimension.width + this.options.blocks.space.horizontal)) + this.boundary.left + this.gutterSize,
                     y: this.boundary.bottom - (j * (this.blockDimension.height + this.options.blocks.space.vertical))
                 };
+
+                // block background
                 this.context.fillStyle = palette[i];
-                if (this.options.blocks.shadow.style === 'custom') {
+                if (this.options.blocks.shadow.style === 'static') {
                     this.context.shadowColor = this.options.blocks.shadow.color;
                     this.context.shadowBlur = this.options.blocks.shadow.blur;
                     this.context.shadowOffsetX = this.options.blocks.shadow.offsetX;
                     this.context.shadowOffsetY = this.options.blocks.shadow.offsetY;
                 }
                 this.context.fillRect(block.x, block.y, this.blockDimension.width, this.blockDimension.height);
+
+                // block border
+                if (this.options.blocks.border.style === 'line') {
+                    this.context.beginPath();
+                    this.context.lineWidth = this.options.blocks.border.width;
+                    this.context.strokeStyle = this.options.blocks.border.color;
+                    this.context.rect(block.x, block.y, this.blockDimension.width, this.blockDimension.height);
+                    this.context.stroke();
+                }
             }
         }
-
-        this.context.restore();
     }
 
     loadData(data) {
+        this.context.save();
+
         this.erase();
         this.drawBoundary();
+        this.drawAxes();
+        this.drawLabels();
 
         const groups = data.reduce((a, c) => {
             const key = c[this.options.blocks.groupBy];
@@ -265,9 +313,10 @@ class BlockChart {
 
         this.drawBlocks(groups);
 
-        this.drawAxes();
-        this.drawLabels();
+        this.restoreContext();
     }
 }
 
-export { BlockChart };
+export {
+    BlockChart
+};
